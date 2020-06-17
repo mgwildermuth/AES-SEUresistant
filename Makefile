@@ -1,61 +1,21 @@
-#CC           = avr-gcc
-#CFLAGS       = -Wall -mmcu=atmega16 -Os -Wl,-Map,test.map
-#OBJCOPY      = avr-objcopy
-CC           = gcc
-LD           = gcc
-AR           = ar
-ARFLAGS      = rcs
-CFLAGS       = -Wall -Os -c
-LDFLAGS      = -Wall -Os -Wl,-Map,test.map
-ifdef AES192
-CFLAGS += -DAES192=1
-endif
-ifdef AES256
-CFLAGS += -DAES256=1
-endif
+CC = gcc
+#CC = arm-linux-gnueabihf-gcc
+CFLAGS = -Wall -Werror
 
-OBJCOPYFLAGS = -j .text -O ihex
-OBJCOPY      = objcopy
+default: test
 
-# include path to AVR library
-INCLUDE_PATH = /usr/lib/avr/include
-# splint static check
-SPLINT       = splint test.c aes.c -I$(INCLUDE_PATH) +charindex -unrecog
+.SILENT: 
+.PHONY: clean
 
-default: test.elf
+test: test.o aes.o
+	$(CC) -o test test.o aes.o
+	rm -f test.o aes.o
 
-.SILENT:
-.PHONY:  lint clean
+test.o: test.c aes.h aes.o
+	$(CC) -c test.c
 
-test.hex : test.elf
-	echo copy object-code to new image and format in hex
-	$(OBJCOPY) ${OBJCOPYFLAGS} $< $@
-
-test.o : test.c aes.h aes.o
-	echo [CC] $@ $(CFLAGS)
-	$(CC) $(CFLAGS) -o  $@ $<
-
-aes.o : aes.c aes.h
-	echo [CC] $@ $(CFLAGS)
-	$(CC) $(CFLAGS) -o $@ $<
-
-test.elf : aes.o test.o
-	echo [LD] $@
-	$(LD) $(LDFLAGS) -o $@ $^
-
-aes.a : aes.o
-	echo [AR] $@
-	$(AR) $(ARFLAGS) $@ $^
-
-lib : aes.a
+aes.o: aes.c aes.h
+	$(CC) -c aes.c
 
 clean:
-	rm -f *.OBJ *.LST *.o *.gch *.out *.hex *.map *.elf *.a
-
-test:
-	make clean && make && ./test.elf
-	make clean && make AES192=1 && ./test.elf
-	make clean && make AES256=1 && ./test.elf
-
-lint:
-	$(call SPLINT)
+	rm -f test *.o *~
