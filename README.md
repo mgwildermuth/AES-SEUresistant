@@ -1,6 +1,6 @@
-### This fork is currently being worked on as a research project for SURG at University. None of the code is currently final.
+# This fork is currently being worked on as a research project for SURG at University. None of the code is currently final.
   
-# The credit for the base code goes to the github user "kokke" who created "tiny-AES-c". Thank you for creating the resources necessary for allowing me to do this project. Below is the readme for "tiny-AES-c":
+### The credit for the base code goes to the github user "kokke" who created "tiny-AES-c". Thank you for creating the resources necessary for allowing me to do this project. Below is the readme for "tiny-AES-c":
 
 ### Tiny AES in C
 
