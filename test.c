@@ -10,23 +10,29 @@
 
 #include "aes.h"
 
+typedef struct inputdata
+{
+	int size;
+	uint8_t input[12176];
+} inputdata;
+
 static void phex(uint8_t* str, FILE* f);
-static int test_encrypt_cbc(void);
-static int test_decrypt_cbc(void);
-/*
+static int readbinary(inputdata* data);
+
+//static int test_encrypt_cbc(void);
+//static int test_decrypt_cbc(void);
 static int test_encrypt_ctr(void);
-static int test_decrypt_ctr(void);
-static int test_encrypt_ecb(void);
-static int test_decrypt_ecb(void);
-static void test_encrypt_ecb_verbose(void);
-*/
-static void test_cbc_verbose(void);
-//static void test_decrypt_cbc_verbose(void);
+//static int test_decrypt_ctr(void);
+//static int test_encrypt_ecb(void);
+//static int test_decrypt_ecb(void);
+
+//static void test_encrypt_ecb_verbose(void);
+//static void test_cbc_verbose(void);
 
 
 int main(void)
 {
-    int exit;
+    //int exit;
 
 #if defined(AES256)
     printf("\nTesting AES256\n\n");
@@ -45,13 +51,14 @@ int main(void)
 	test_decrypt_ecb() + test_encrypt_ecb();
    	test_encrypt_ecb_verbose();
    	*/
-    //exit = test_encrypt_cbc() + test_decrypt_cbc();
-    //printf("\n");
     
-    test_cbc_verbose();
+    //test_cbc_verbose();
     //test_decrypt_cbc_verbose();
+    
+    return test_encrypt_ctr();
+    //test_decrypt_ctr();
 
-    return 1;
+    //return 1;
 }
 
 
@@ -75,6 +82,28 @@ static void phex(uint8_t* str, FILE* f)
         	fprintf(f, " ");
     }
     fprintf(f, "\n");
+}
+
+static int readbinary(inputdata* data)
+{
+	FILE* binfile = fopen("input.bin", "rb");
+    if(binfile == NULL)
+    {
+    	printf("Binary file bad\n");
+    	return(2);
+    }
+    fread(data, sizeof(inputdata), 1, binfile);
+    fclose(binfile);
+    return(0);
+    
+    /*
+    for(int x = 0; x < inbin.size; x++)
+    {
+    	printf("0x%hhx ", inbin.input[x]);
+    }
+    printf("\nSize: %d\n\n", inbin.size);
+    //printf("Original: 0x%hhx \nNew: 0x%hhx \n", inbin.input[12171], (inbin.input[12171] << 4));
+    */
 }
 
 /*
@@ -276,7 +305,6 @@ static int test_decrypt_cbc(void)
 	return(1);
     }
 }
-*/
 
 static void test_cbc_verbose(void)
 {
@@ -622,19 +650,18 @@ static void test_cbc_verbose(void)
 
    	uint8_t rounds = (sizeof(input) / sizeof(key));
 	
-   	/*
-    fprintf(f, "#########################################\n\n");
-    fprintf(f, "Block Cipher Modes of Operation\n\n");
-    fprintf(f, "\tChiper Block Chaining (CBC)\n\n");
-    fprintf(f, "IV is\n");
-    phex(iv, f);
-    fprintf(f, "\nPlaintext is\n");
-	for (i = (uint8_t) 0; i < (uint8_t) rounds; ++i)
-    {
-        phex(input + i * (uint8_t) 16, f);
-    }
-    fprintf(f, "\n#########################################\n\n");
-	*/
+   	
+    //fprintf(f, "#########################################\n\n");
+    //fprintf(f, "Block Cipher Modes of Operation\n\n");
+    //fprintf(f, "\tChiper Block Chaining (CBC)\n\n");
+    //fprintf(f, "IV is\n");
+    //phex(iv, f);
+    //fprintf(f, "\nPlaintext is\n");
+	//for (i = (uint8_t) 0; i < (uint8_t) rounds; ++i)
+    //{
+    //    phex(input + i * (uint8_t) 16, f);
+    //}
+    //fprintf(f, "\n#########################################\n\n");
 
     fprintf(f, "CBC-AES128 (Encryption)\n");
     //fprintf(f, "-----------------------------------------\n\n");
@@ -661,16 +688,15 @@ static void test_cbc_verbose(void)
     //fprintf(f, "\n=========================================\n\n");
 
     fprintf(f, "\nCBC-AES128 (Decryption)\n");
-    /*
-    fprintf(f, "-----------------------------------------\n\n");
-    fprintf(f, "Key is\n");
-    phex(key, f);
-	fprintf(f, "\nCiphertext is\n");
-	for (i = (uint8_t) 0; i < (uint8_t) rounds; ++i)
-    {
-        phex(input + i * (uint8_t) 16, f);
-    }
-	*/
+    
+    //fprintf(f, "-----------------------------------------\n\n");
+    //fprintf(f, "Key is\n");
+    //phex(key, f);
+	//fprintf(f, "\nCiphertext is\n");
+	//for (i = (uint8_t) 0; i < (uint8_t) rounds; ++i)
+    //{
+    //    phex(input + i * (uint8_t) 16, f);
+    //}
 
     // print the resulting cipher as 4 x 16 byte strings
     fprintf(f, "\nPlaintext is\n");
@@ -693,7 +719,6 @@ static void test_cbc_verbose(void)
 
 }
 
-/*
 static int test_encrypt_cbc(void)
 {
 #if defined(AES256)
@@ -736,18 +761,19 @@ static int test_encrypt_cbc(void)
 	return(1);
     }
 }
+*/
 
-/*
-
-static int test_xcrypt_ctr(const char* xcrypt);
+//static int test_xcrypt_ctr(const char* xcrypt);
+static int verbose_test_xcrypt_ctr(const char* xcrypt);
 static int test_encrypt_ctr(void)
 {
-    return test_xcrypt_ctr("encrypt");
+    return verbose_test_xcrypt_ctr("encrypt");
 }
 
+/*
 static int test_decrypt_ctr(void)
 {
-    return test_xcrypt_ctr("decrypt");
+    return verbose_test_xcrypt_ctr("decrypt");
 }
 
 static int test_xcrypt_ctr(const char* xcrypt)
@@ -794,3 +820,107 @@ static int test_xcrypt_ctr(const char* xcrypt)
     }
 }
 */
+
+static int verbose_test_xcrypt_ctr(const char* xcrypt)
+{
+
+	FILE* f = fopen("test_output.txt", "w");
+	long unsigned int i;
+
+    uint8_t key[16] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
+    uint8_t iv[16]  = { 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff };
+   	
+   	/* 
+    uint8_t input[64]={ 0x87, 0x4d, 0x61, 0x91, 0xb6, 0x20, 0xe3, 0x26, 0x1b, 0xef, 0x68, 0x64, 0x99, 0x0d, 0xb6, 0xce,
+                        0x98, 0x06, 0xf6, 0x6b, 0x79, 0x70, 0xfd, 0xff, 0x86, 0x17, 0x18, 0x7b, 0xb9, 0xff, 0xfd, 0xff,
+                        0x5a, 0xe4, 0xdf, 0x3e, 0xdb, 0xd5, 0xd3, 0x5e, 0x5b, 0x4f, 0x09, 0x02, 0x0d, 0xb0, 0x3e, 0xab,
+                        0x1e, 0x03, 0x1d, 0xda, 0x2f, 0xbe, 0x03, 0xd1, 0x79, 0x21, 0x70, 0xa0, 0xf3, 0x00, 0x9c, 0xee };
+    uint8_t plaintext[64]={ 0x87, 0x4d, 0x61, 0x91, 0xb6, 0x20, 0xe3, 0x26, 0x1b, 0xef, 0x68, 0x64, 0x99, 0x0d, 0xb6, 0xce,
+                        0x98, 0x06, 0xf6, 0x6b, 0x79, 0x70, 0xfd, 0xff, 0x86, 0x17, 0x18, 0x7b, 0xb9, 0xff, 0xfd, 0xff,
+                        0x5a, 0xe4, 0xdf, 0x3e, 0xdb, 0xd5, 0xd3, 0x5e, 0x5b, 0x4f, 0x09, 0x02, 0x0d, 0xb0, 0x3e, 0xab,
+                        0x1e, 0x03, 0x1d, 0xda, 0x2f, 0xbe, 0x03, 0xd1, 0x79, 0x21, 0x70, 0xa0, 0xf3, 0x00, 0x9c, 0xee };
+	*/
+
+    inputdata data, plaindata;
+    if(readbinary(&data) == 2 || readbinary(&plaindata) == 2)
+    {
+    	fclose(f);
+    	return(2);
+    }
+    /*
+    for(int x = 0; x < data.size; x++)
+    {
+    	printf("0x%hhx ", data.input[x]);
+    }
+    printf("\nSize: %d\n\n", data.size);
+    uint8_t input[] = data.input;
+    */
+    long unsigned int rounds = (sizeof(data.input) / sizeof(key));
+    //if the text is longer than a block length, complete an additional round
+    //printf("Overflow: %lu, Rounds: %lu\n", (sizeof(data.input) % sizeof(key)), rounds);
+    if( (sizeof(data.input) % sizeof(key)) != 0 )
+    {
+    	rounds++;
+    }
+    //printf("Sizeof(data.input): %ld, Rounds: %lu\n", sizeof(data.input), rounds);
+
+    struct AES_ctx ctx;
+    AES_init_ctx_iv(&ctx, key, iv);
+
+    //AES_CTR_xcrypt_buffer(&ctx, in, 64);
+
+    // print the resulting cipher as 4 x 16 byte strings
+    //fprintf(f, "Plaintext is\n");
+
+    //for(i = (uint8_t) 0; i < (uint8_t) rounds; i++)
+    //{
+    //	phex(input + (i * 16), f);
+    //}
+
+	fprintf(f, "CBC-AES128 (Encryption)\n");
+
+    // print the resulting cipher as 4 x 16 byte strings
+    fprintf(f, "\nCiphertext is\n");
+
+    AES_CTR_xcrypt_buffer(&ctx, data.input, 64);
+    for(i = 0; i < rounds; i++)
+    {
+    	//AES_CTR_xcrypt_buffer(&ctx, input + (i * 16), 16);
+    	phex(data.input + (i * 16), f);
+    }
+
+    fprintf(f, "\nCBC-AES128 (Decryption)\n");
+
+    // print the resulting cipher as 4 x 16 byte strings
+    fprintf(f, "\nPlaintext is\n");
+
+    // reset the iv to the original from the leftover iv by encryption
+    AES_ctx_set_iv(&ctx, iv);
+
+    AES_CTR_xcrypt_buffer(&ctx, data.input, 64);
+    for(i = 0; i < rounds; i++)
+    {
+    	phex(data.input + (i * 16), f);
+    }
+
+    printf("CTR %s: ", xcrypt);
+    fprintf(f, "\n\nCTR %s: ", xcrypt);
+  
+    if (0 == memcmp((char *) plaindata.input, (char *) data.input, 64)) {
+        printf("SUCCESS!\n");
+        fprintf(f, "SUCCESS!");
+		return(0);
+    } else {
+        printf("FAILURE!\n");
+        fprintf(f, "FAILURE!");
+		return(1);
+    }
+
+    for(i = 0; i < rounds*16; i++)
+    {
+    	printf("%hhx ", data.input[i]);
+    }
+    printf("\n");
+
+    fclose(f);
+}
