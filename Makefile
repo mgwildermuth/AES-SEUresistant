@@ -1,21 +1,33 @@
+#/mnt/c/users/mgw92/dropbox/pitt/"SHREC SURG '20"/AES-SEUresistant
+
 CC = gcc
-#CC = arm-linux-gnueabihf-gcc
+ARM_CC = arm-linux-gnueabihf-gcc
 CFLAGS = -Wall -Werror
 
-default: test
+default: test arm_test
 
 .SILENT: 
 .PHONY: clean
 
+arm_test:
+	$(ARM_CC) $(CFLAGS) -o arm_test test.c aes.c
+
 test: test.o aes.o
-	$(CC) -o test test.o aes.o
-	rm -f test.o aes.o
+	$(CC) $(CFLAGS) -o test test.o aes.o
+#	rm -f test.o aes.o
 
 test.o: test.c aes.h aes.o
-	$(CC) -c test.c
+	$(CC) $(CFLAGS) -c test.c
 
 aes.o: aes.c aes.h
-	$(CC) -c aes.c
+	$(CC) $(CFLAGS) -c aes.c
+
+input-to-bin: input-to-bin.o
+	$(CC) $(CFLAGS) -o inbin input-to-bin.c
+#	rm -f test.o aes.o
+
+input-to-bin.o: input-to-bin.c
+	$(CC) $(CFLAGS) -c input-to-bin.c
 
 clean:
-	rm -f test *.o *~
+	rm -f arm_test test inbin *.o *~
