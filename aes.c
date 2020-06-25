@@ -560,10 +560,10 @@ void AES_CTR_xcrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, uint32_t length)
       }
 
       bi = 0;
-    }
+    }//end of first if
 
     buf[i] = (buf[i] ^ buffer[bi]);
-  }
+  }//end of for loop
 }
 
 #endif // #if defined(CTR) && (CTR == 1)
