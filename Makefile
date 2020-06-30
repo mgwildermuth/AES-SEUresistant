@@ -4,13 +4,13 @@ CC = gcc
 ARM_CC = arm-linux-gnueabihf-gcc
 CFLAGS = -Wall -Werror
 
-default: test arm_test
+default: test arm_aes
 
 .SILENT: 
 .PHONY: clean
 
-arm_test:
-	$(ARM_CC) $(CFLAGS) -o arm_test test.c aes.c
+arm_aes:
+	$(ARM_CC) $(CFLAGS) -o arm_aes test.c aes.c
 
 test: test.o aes.o
 	$(CC) $(CFLAGS) -o test test.o aes.o
@@ -30,4 +30,4 @@ input-to-bin.o: input-to-bin.c
 	$(CC) $(CFLAGS) -c input-to-bin.c
 
 clean:
-	rm -f arm_test test inbin *.o *~
+	rm -f arm_aes test inbin *.o *~
