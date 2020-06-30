@@ -324,11 +324,7 @@ static int verbose_test_xcrypt_ctr(const char* xcrypt)
     struct AES_ctx ctx;
     AES_init_ctx_iv(&ctx, key, iv);
 
-	fprintf(f, "CBC-AES128 (Encryption)\n");
-
     // print the resulting cipher as 4 x 16 byte strings
-    fprintf(f, "\nCiphertext is\n");
-
     AES_CTR_xcrypt_buffer(&ctx, data.input, inputlen);
     for(i = 0; i < rounds; i++)
     {
@@ -338,10 +334,8 @@ static int verbose_test_xcrypt_ctr(const char* xcrypt)
     // reset the iv to the original from the leftover iv by encryption (counter was incremented previously)
     AES_ctx_set_iv(&ctx, iv);
 
-    fprintf(f, "\nCBC-AES128 (Decryption)\n");
-
     // print the resulting cipher as 4 x 16 byte strings
-    fprintf(f, "\nPlaintext is\n");
+    fprintf(f, "\n\n");
 
     AES_CTR_xcrypt_buffer(&ctx, data.input, inputlen);
     for(i = 0; i < rounds; i++)
@@ -350,16 +344,15 @@ static int verbose_test_xcrypt_ctr(const char* xcrypt)
     }
 
     printf("CTR %s: ", xcrypt);
-    fprintf(f, "\n\nCTR %s: ", xcrypt);
   
     if (0 == memcmp((char *) plaindata.input, (char *) data.input, inputlen)) {
         printf("SUCCESS!\n");
-        fprintf(f, "SUCCESS!");
+        fprintf(f, "\n\nCTR %s: SUCCESS!", xcrypt);
         fclose(f);
 		return(0);
     } else {
         printf("FAILURE!\n");
-        fprintf(f, "FAILURE!");
+        fprintf(f, "\n\nCTR %s: FAILURE!", xcrypt);
         fclose(f);
 		return(1);
     }
