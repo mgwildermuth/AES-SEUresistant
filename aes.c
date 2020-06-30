@@ -138,7 +138,7 @@ static const uint8_t h_rd[256] = {
   0x02, 0x09, 0x02, 0x04, 0x03, 0x0e, 0x06, 0x01, 0x0f, 0x0e, 0x0f, 0x0e, 0x04, 0x05, 0x01, 0x03, 
   0x03, 0x07, 0x0b, 0x0d, 0x06, 0x02, 0x0d, 0x07, 0x05, 0x0f, 0x07, 0x0a, 0x07, 0x02, 0x0f, 0x0a, 
   0x00, 0x09, 0x06, 0x0f, 0x06, 0x08, 0x07, 0x05, 0x09, 0x08, 0x09, 0x02, 0x04, 0x01, 0x03, 0x06 };
-
+/*
 static const uint8_t h_2rd[256] = { 
   0x05, 0x06, 0x08, 0x08, 0x09, 0x06, 0x08, 0x0b, 0x0d, 0x03, 0x06, 0x05, 0x04, 0x0a, 0x09, 0x06, 
   0x0b, 0x06, 0x0b, 0x08, 0x0a, 0x05, 0x05, 0x0b, 0x09, 0x0b, 0x08, 0x0a, 0x0b, 0x08, 0x05, 0x06, 
@@ -156,7 +156,7 @@ static const uint8_t h_2rd[256] = {
   0x0e, 0x06, 0x09, 0x05, 0x0d, 0x0d, 0x0a, 0x0e, 0x0e, 0x05, 0x06, 0x09, 0x08, 0x08, 0x05, 0x09, 
   0x0b, 0x09, 0x08, 0x0d, 0x05, 0x09, 0x0b, 0x08, 0x09, 0x05, 0x0b, 0x09, 0x09, 0x05, 0x0d, 0x04, 
   0x08, 0x08, 0x08, 0x0e, 0x04, 0x09, 0x0d, 0x0e, 0x0d, 0x0b, 0x05, 0x05, 0x08, 0x0e, 0x0a, 0x0e };
-
+*/
 /*
  * Jordan Goulder points out in PR #12 (https://github.com/kokke/tiny-AES-C/pull/12),
  * that you can remove most of the elements in the Rcon array, because they are unused.
@@ -187,7 +187,7 @@ static uint8_t getSBoxInvert(uint8_t num)
 #define getSBoxInvert(num) (rsbox[(num)])
 
 // This predicts the hamming code using the table
-//#define getHBoxValue(num) (h_rd[(num)])
+#define getHBoxValue(num) (h_rd[(num)])
 
 // bits in the byte are numbered 0-7
 /*
@@ -206,11 +206,8 @@ static uint8_t get_bit(uint8_t byte, uint8_t bitnum)
 }
 
 // creating hamming code from a byte of data
-static void hamming_encode(uint8_t given)
-{
-  //get_bit(h_rd[0], (uint8_t) 7);
-  //printf("\nByte: 0x%hhx. 2nd bit: 0x%hhx\n", given, set_bit(given, (uint8_t) 7, (uint8_t) 1));
-  
+static uint8_t hamming_encode(uint8_t given)
+{ 
   uint8_t hambyte = 0x00;
   uint8_t zero = get_bit(given, 0);
   uint8_t one = get_bit(given, 1);
@@ -227,7 +224,82 @@ static void hamming_encode(uint8_t given)
   uint8_t setthree = seven ^ six ^ four ^ three ^ one;
 
   hambyte = (setzero | (setone << 0x01) | (settwo << 0x02) | (setthree << 0x03) );
-  printf("0x0%hhx, ", hambyte);
+  //printf("0x0%hhx, ", *given);
+  return hambyte;
+}
+
+static void encodeState(state_t* state, hamstate_t* hamstate)
+{
+  uint8_t i, j;
+  for (i = 0; i < 4; ++i)
+  {
+    for (j = 0; j < 4; ++j)
+    {
+      (*hamstate)[j][i] = hamming_encode((*state)[j][i]);
+    }
+  }
+  //(*hamstate)[0][0] = (*hamstate)[0][0] >> 0x01;
+}
+
+static void predictSub(state_t* state, hamstate_t* pcode)
+{
+  uint8_t i, j;
+  for (i = 0; i < 4; ++i)
+  {
+    for (j = 0; j < 4; ++j)
+    {
+      (*pcode)[j][i] = getHBoxValue((*state)[j][i]);
+    }
+  }
+}
+/*
+static void predictShift(state_t* state, hamstate_t* pcode)
+{
+  //
+}
+
+static void predictMoveCols(state_t* state, hamstate_t* pcode)
+{
+  //
+}
+
+static void predictAddKey(state_t* state, hamstate_t* pcode)
+{
+  //
+}
+*/
+
+static void compareCodes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
+{
+  /*
+  for (i = 0; i < 4; ++i)
+  {
+    for (j = 0; j < 4; ++j)
+    {
+      printf("0x0%hhx, ", (*hamstate)[j][i]);
+    }
+  }
+
+  for (i = 0; i < 4; ++i)
+  {
+    for (j = 0; j < 4; ++j)
+    {
+      printf("0x0%hhx, ", (*pcode)[j][i]);
+    }
+  }
+  */
+
+  if(0 != memcmp((char*) hamstate, (char*) pcode, 16))
+  {
+    printf("Codes do not agree\n");
+    exit(2);
+  }
+  /*
+  else
+  {
+    printf("Codes equal! ");
+  }
+  */
 }
 
 // This function produces Nb(Nr+1) round keys. The round keys are used in each round to decrypt the states. 
@@ -338,6 +410,7 @@ static void AddRoundKey(uint8_t round, state_t* state, const uint8_t* RoundKey)
 // state matrix with values in an S-box.
 static void SubBytes(state_t* state)
 {
+
   uint8_t i, j;
   for (i = 0; i < 4; ++i)
   {
@@ -346,6 +419,7 @@ static void SubBytes(state_t* state)
       (*state)[j][i] = getSBoxValue((*state)[j][i]);
     }
   }
+
 }
 
 // The ShiftRows() function shifts the rows in the state to the left.
@@ -501,9 +575,17 @@ static void Cipher(state_t* state, const uint8_t* RoundKey)
   // The first Nr-1 rounds are identical.
   // These Nr rounds are executed in the loop below.
   // Last one without MixColumns()
+
+  hamstate_t hamstate, pcode;
   for (round = 1; ; ++round)
   {
+    predictSub(state, &pcode);
+
     SubBytes(state);
+    
+    encodeState(state, &hamstate);
+    compareCodes(state, &hamstate, &pcode);
+    
     ShiftRows(state);
     if (round == Nr) {
       break;
@@ -617,8 +699,10 @@ void AES_CBC_decrypt_buffer(struct AES_ctx* ctx, uint8_t* buf,  uint32_t length)
 /* Symmetrical operation: same function for encrypting as for decrypting. Note any IV/nonce should never be reused with the same key */
 void AES_CTR_xcrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, uint32_t length)
 {
+  //hamstate_t hamstate, pcode;
+
   uint8_t buffer[AES_BLOCKLEN];
-  
+
   unsigned i;
   int bi;
   for (i = 0, bi = AES_BLOCKLEN; i < length; ++i, ++bi)
