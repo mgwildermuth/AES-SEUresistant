@@ -212,13 +212,40 @@ static uint8_t getSBoxInvert(uint8_t num)
 
 // The respective tables help predict the hamming codes for the aes transforms
 #define getHBoxValue(num) (h_rd[(num)])
-
 #define getH2BoxValue(num) (h_2rd[(num)])
-
 #define getH3BoxValue(num) (h_3rd[(num)])
 
-// bits in the byte are numbered 0-7
+// Functions used during multiplication
 
+static uint8_t xtime(uint8_t x)
+{
+  return ((x<<1) ^ (((x>>7) & 1) * 0x1b));
+}
+
+// Multiply is used to multiply numbers in the field GF(2^8)
+// Note: The last call to xtime() is unneeded, but often ends up generating a smaller binary
+//       The compiler seems to be able to vectorize the operation better this way.
+//       See https://github.com/kokke/tiny-AES-c/pull/34
+#if MULTIPLY_AS_A_FUNCTION
+static uint8_t Multiply(uint8_t x, uint8_t y)
+{
+  return (((y & 1) * x) ^
+       ((y>>1 & 1) * xtime(x)) ^
+       ((y>>2 & 1) * xtime(xtime(x))) ^
+       ((y>>3 & 1) * xtime(xtime(xtime(x)))) ^
+       ((y>>4 & 1) * xtime(xtime(xtime(xtime(x)))))); /* this last call to xtime() can be omitted */
+  }
+#else
+#define Multiply(x, y)                                \
+      (  ((y & 1) * x) ^                              \
+      ((y>>1 & 1) * xtime(x)) ^                       \
+      ((y>>2 & 1) * xtime(xtime(x))) ^                \
+      ((y>>3 & 1) * xtime(xtime(xtime(x)))) ^         \
+      ((y>>4 & 1) * xtime(xtime(xtime(xtime(x))))))   \
+
+#endif
+
+// bits in the byte are numbered 0-7
 static uint8_t get_bit(uint8_t byte, uint8_t bitnum)
 {
   return ((byte >> bitnum) & 0x01);
@@ -254,6 +281,18 @@ static void encodeState(state_t* state, hamstate_t* hamstate)
     for (j = 0; j < 4; ++j)
     {
       (*hamstate)[j][i] = hamming_encode((*state)[j][i]);
+    }
+  }
+}
+
+static void predictAddKey(uint8_t round, state_t* state, const uint8_t* RoundKey, hamstate_t* pcode)
+{
+  uint8_t i,j;
+  for (i = 0; i < 4; ++i)
+  {
+    for (j = 0; j < 4; ++j)
+    {
+      (*pcode)[i][j] ^= hamming_encode(RoundKey[(round * Nb * 4) + (i * Nb) + j]);
     }
   }
 }
@@ -298,12 +337,52 @@ static void predictShift(hamstate_t* pcode)
   (*pcode)[1][3] = temp;
 }
 
-/*
-static void predictAddKey(state_t* state, hamstate_t* pcode)
+static void predictMixCols(state_t* state, hamstate_t* pcode)
 {
-  //
+
+  for(uint8_t c = 0; c < 4; ++c)
+  {
+    (*pcode)[c][0] = hamming_encode(xtime((*state)[c][0])) ^ hamming_encode(Multiply((*state)[c][1], 0x03)) ^ hamming_encode((*state)[c][2]) ^ hamming_encode((*state)[c][3]);
+    (*pcode)[c][1] = hamming_encode((*state)[c][0]) ^ hamming_encode(xtime((*state)[c][1])) ^ hamming_encode(Multiply((*state)[c][2], 0x03)) ^ hamming_encode((*state)[c][3]);
+    (*pcode)[c][2] = hamming_encode((*state)[c][0]) ^ hamming_encode((*state)[c][1]) ^ hamming_encode(xtime((*state)[c][2])) ^ hamming_encode(Multiply((*state)[c][3], 0x03));
+    (*pcode)[c][3] = hamming_encode(Multiply((*state)[c][0], 0x03)) ^ hamming_encode((*state)[c][1]) ^ hamming_encode((*state)[c][2]) ^ hamming_encode(xtime((*state)[c][3]));
+    //printf("Line: (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx\n", pcode[0][c], (*pcode)[0][c], pcode[1][c], (*pcode)[1][c], pcode[2][c], (*pcode)[2][c], pcode[3][c], (*pcode)[3][c]);
+
+    //-----------------------------------------------
+    // Code for hamming prediction using the tables
+    //-----------------------------------------------
+
+    /*
+    //printf("First Entry: (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx\n", (*state)[c][0], getH2BoxValue((*state)[c][0]), (*state)[c][1], getH3BoxValue((*state)[c][1]), (*state)[c][2], getHBoxValue((*state)[c][2]), (*state)[c][3], getHBoxValue((*state)[c][3]));
+    (*pcode)[c][0] = getH2BoxValue((*state)[c][0]) ^ getH3BoxValue((*state)[c][1]) ^ getHBoxValue((*state)[c][2]) ^ getHBoxValue((*state)[c][3]);
+    (*pcode)[c][1] = getHBoxValue((*state)[c][0]) ^ getH2BoxValue((*state)[c][1]) ^ getH3BoxValue((*state)[c][2]) ^ getHBoxValue((*state)[c][3]);
+    (*pcode)[c][2] = getHBoxValue((*state)[c][0]) ^ getHBoxValue((*state)[c][1]) ^ getH2BoxValue((*state)[c][2]) ^ getH3BoxValue((*state)[c][3]);
+    (*pcode)[c][3] = getH3BoxValue((*state)[c][0]) ^ getHBoxValue((*state)[c][1]) ^ getHBoxValue((*state)[c][2]) ^ getH2BoxValue((*state)[c][3]);
+    //printf("Line: (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx\n", pcode[0][c], (*pcode)[0][c], pcode[1][c], (*pcode)[1][c], pcode[2][c], (*pcode)[2][c], pcode[3][c], (*pcode)[3][c]);
+
+    printf("First Entry: (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx\n", (*state)[0][c], getH2BoxValue((*state)[0][c]), (*state)[1][c], getH3BoxValue((*state)[1][c]), (*state)[2][c], getHBoxValue((*state)[2][c]), (*state)[3][c], getHBoxValue((*state)[3][c]));
+    (*pcode[0][c]) = getH2BoxValue((*state)[0][c]) ^ getH3BoxValue((*state)[1][c]) ^ getHBoxValue((*state)[2][c]) ^ getHBoxValue((*state)[3][c]);
+    (*pcode[1][c]) = getHBoxValue((*state)[0][c]) ^ getH2BoxValue((*state)[1][c]) ^ getH3BoxValue((*state)[2][c]) ^ getHBoxValue((*state)[3][c]);
+    (*pcode[2][c]) = getHBoxValue((*state)[0][c]) ^ getHBoxValue((*state)[1][c]) ^ getH2BoxValue((*state)[2][c]) ^ getH3BoxValue((*state)[3][c]);
+    (*pcode[3][c]) = getH3BoxValue((*state)[0][c]) ^ getHBoxValue((*state)[1][c]) ^ getHBoxValue((*state)[2][c]) ^ getH2BoxValue((*state)[3][c]);
+    */
+
+  }
+
+  /*
+  uint8_t r, c;
+  printf("\nPredict code:\n");
+  for (r = 0; r < 4; ++r)
+  {
+    for (c = 0; c < 4; ++c)
+    {
+      printf("(%p) 0x%hhx, ", (pcode)[c][r], (*pcode)[c][r] );
+    }
+    printf("\n");
+  }
+  printf("\n");
+  */
 }
-*/
 
 static void compareCodes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode, char* transform)
 {
@@ -339,7 +418,7 @@ static void compareCodes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode
     printf("\n");
   }
   printf("\n");
-  */
+  //*/
   
   if(0 != memcmp((char*) hamstate, (char*) pcode, sizeof(hamstate_t)))
   {
@@ -446,8 +525,10 @@ void AES_ctx_set_iv(struct AES_ctx* ctx, const uint8_t* iv)
 
 // This function adds the round key to state.
 // The round key is added to the state by an XOR function.
-static void AddRoundKey(uint8_t round, state_t* state, const uint8_t* RoundKey)
+static void AddRoundKey(uint8_t round, state_t* state, const uint8_t* RoundKey, hamstate_t* hamstate, hamstate_t* pcode)
 {
+  predictAddKey(round, state, RoundKey, pcode);
+
   uint8_t i,j;
   for (i = 0; i < 4; ++i)
   {
@@ -456,13 +537,15 @@ static void AddRoundKey(uint8_t round, state_t* state, const uint8_t* RoundKey)
       (*state)[i][j] ^= RoundKey[(round * Nb * 4) + (i * Nb) + j];
     }
   }
+
+  encodeState(state, hamstate);
+  compareCodes(state, hamstate, pcode, "AddRoundKey");
 }
 
 // The SubBytes Function Substitutes the values in the
 // state matrix with values in an S-box.
 static void SubBytes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
 {
-  //compareCodes(state, hamstate, pcode, "Pre-SubBytes");
   predictSub(state, pcode);
 
   uint8_t i, j;
@@ -512,81 +595,6 @@ static void ShiftRows(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
 
   encodeState(state, hamstate);
   compareCodes(state, hamstate, pcode, "ShiftRows");
-}
-
-static uint8_t xtime(uint8_t x)
-{
-  return ((x<<1) ^ (((x>>7) & 1) * 0x1b));
-}
-
-// Multiply is used to multiply numbers in the field GF(2^8)
-// Note: The last call to xtime() is unneeded, but often ends up generating a smaller binary
-//       The compiler seems to be able to vectorize the operation better this way.
-//       See https://github.com/kokke/tiny-AES-c/pull/34
-#if MULTIPLY_AS_A_FUNCTION
-static uint8_t Multiply(uint8_t x, uint8_t y)
-{
-  return (((y & 1) * x) ^
-       ((y>>1 & 1) * xtime(x)) ^
-       ((y>>2 & 1) * xtime(xtime(x))) ^
-       ((y>>3 & 1) * xtime(xtime(xtime(x)))) ^
-       ((y>>4 & 1) * xtime(xtime(xtime(xtime(x)))))); /* this last call to xtime() can be omitted */
-  }
-#else
-#define Multiply(x, y)                                \
-      (  ((y & 1) * x) ^                              \
-      ((y>>1 & 1) * xtime(x)) ^                       \
-      ((y>>2 & 1) * xtime(xtime(x))) ^                \
-      ((y>>3 & 1) * xtime(xtime(xtime(x)))) ^         \
-      ((y>>4 & 1) * xtime(xtime(xtime(xtime(x))))))   \
-
-#endif
-
-static void predictMixCols(state_t* state, hamstate_t* pcode)
-{
-
-  for(uint8_t c = 0; c < 4; ++c)
-  {
-    (*pcode)[c][0] = hamming_encode(xtime((*state)[c][0])) ^ hamming_encode(Multiply((*state)[c][1], 0x03)) ^ hamming_encode((*state)[c][2]) ^ hamming_encode((*state)[c][3]);
-    (*pcode)[c][1] = hamming_encode((*state)[c][0]) ^ hamming_encode(xtime((*state)[c][1])) ^ hamming_encode(Multiply((*state)[c][2], 0x03)) ^ hamming_encode((*state)[c][3]);
-    (*pcode)[c][2] = hamming_encode((*state)[c][0]) ^ hamming_encode((*state)[c][1]) ^ hamming_encode(xtime((*state)[c][2])) ^ hamming_encode(Multiply((*state)[c][3], 0x03));
-    (*pcode)[c][3] = hamming_encode(Multiply((*state)[c][0], 0x03)) ^ hamming_encode((*state)[c][1]) ^ hamming_encode((*state)[c][2]) ^ hamming_encode(xtime((*state)[c][3]));
-    //printf("Line: (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx\n", pcode[0][c], (*pcode)[0][c], pcode[1][c], (*pcode)[1][c], pcode[2][c], (*pcode)[2][c], pcode[3][c], (*pcode)[3][c]);
-
-    //-----------------------------------------------
-    // Code for hamming prediction using the tables
-    //-----------------------------------------------
-
-    /*
-    //printf("First Entry: (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx\n", (*state)[c][0], getH2BoxValue((*state)[c][0]), (*state)[c][1], getH3BoxValue((*state)[c][1]), (*state)[c][2], getHBoxValue((*state)[c][2]), (*state)[c][3], getHBoxValue((*state)[c][3]));
-    (*pcode)[c][0] = getH2BoxValue((*state)[c][0]) ^ getH3BoxValue((*state)[c][1]) ^ getHBoxValue((*state)[c][2]) ^ getHBoxValue((*state)[c][3]);
-    (*pcode)[c][1] = getHBoxValue((*state)[c][0]) ^ getH2BoxValue((*state)[c][1]) ^ getH3BoxValue((*state)[c][2]) ^ getHBoxValue((*state)[c][3]);
-    (*pcode)[c][2] = getHBoxValue((*state)[c][0]) ^ getHBoxValue((*state)[c][1]) ^ getH2BoxValue((*state)[c][2]) ^ getH3BoxValue((*state)[c][3]);
-    (*pcode)[c][3] = getH3BoxValue((*state)[c][0]) ^ getHBoxValue((*state)[c][1]) ^ getHBoxValue((*state)[c][2]) ^ getH2BoxValue((*state)[c][3]);
-    //printf("0x%hhx, 0x%hhx, 0x%hhx, 0x%hhx\n", (*pcode[0][j]), (*pcode[1][j]), (*pcode[2][j]), (*pcode[3][j]));
-    
-    printf("First Entry: (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx\n", (*state)[0][c], getH2BoxValue((*state)[0][c]), (*state)[1][c], getH3BoxValue((*state)[1][c]), (*state)[2][c], getHBoxValue((*state)[2][c]), (*state)[3][c], getHBoxValue((*state)[3][c]));
-    (*pcode[0][c]) = getH2BoxValue((*state)[0][c]) ^ getH3BoxValue((*state)[1][c]) ^ getHBoxValue((*state)[2][c]) ^ getHBoxValue((*state)[3][c]);
-    (*pcode[1][c]) = getHBoxValue((*state)[0][c]) ^ getH2BoxValue((*state)[1][c]) ^ getH3BoxValue((*state)[2][c]) ^ getHBoxValue((*state)[3][c]);
-    (*pcode[2][c]) = getHBoxValue((*state)[0][c]) ^ getHBoxValue((*state)[1][c]) ^ getH2BoxValue((*state)[2][c]) ^ getH3BoxValue((*state)[3][c]);
-    (*pcode[3][c]) = getH3BoxValue((*state)[0][c]) ^ getHBoxValue((*state)[1][c]) ^ getHBoxValue((*state)[2][c]) ^ getH2BoxValue((*state)[3][c]);
-    */
-
-  }
-
-  /*
-  uint8_t r, c;
-  printf("\nPredict code:\n");
-  for (r = 0; r < 4; ++r)
-  {
-    for (c = 0; c < 4; ++c)
-    {
-      printf("(%p) 0x%hhx, ", (pcode)[c][r], (*pcode)[c][r] );
-    }
-    printf("\n");
-  }
-  printf("\n");
-  */
 }
 
 // MixColumns function mixes the columns of the state matrix
@@ -681,15 +689,17 @@ static void Cipher(state_t* state, const uint8_t* RoundKey)
 {
   uint8_t round = 0;
 
+  hamstate_t hamstate, pcode;
+  encodeState(state, &pcode);
+
   // Add the First round key to the state before starting the rounds.
-  AddRoundKey(0, state, RoundKey);
+  AddRoundKey(0, state, RoundKey, &hamstate, &pcode);
 
   // There will be Nr rounds.
   // The first Nr-1 rounds are identical.
   // These Nr rounds are executed in the loop below.
   // Last one without MixColumns()
 
-  hamstate_t hamstate, pcode;
   for (round = 1; ; ++round)
   {
     SubBytes(state, &hamstate, &pcode); 
@@ -698,10 +708,10 @@ static void Cipher(state_t* state, const uint8_t* RoundKey)
       break;
     }
     MixColumns(state, &hamstate, &pcode);
-    AddRoundKey(round, state, RoundKey);
+    AddRoundKey(round, state, RoundKey, &hamstate, &pcode);
   }
   // Add round key to last round
-  AddRoundKey(Nr, state, RoundKey);
+  AddRoundKey(Nr, state, RoundKey, &hamstate, &pcode);
 }
 
 #if (defined(CBC) && CBC == 1) || (defined(ECB) && ECB == 1)
@@ -709,8 +719,9 @@ static void InvCipher(state_t* state, const uint8_t* RoundKey)
 {
   uint8_t round = 0;
 
+  hamstate_t hamstate, pcode;
   // Add the First round key to the state before starting the rounds.
-  AddRoundKey(Nr, state, RoundKey);
+  AddRoundKey(Nr, state, RoundKey, &hamstate, &pcode);
 
   // There will be Nr rounds.
   // The first Nr-1 rounds are identical.
@@ -720,7 +731,7 @@ static void InvCipher(state_t* state, const uint8_t* RoundKey)
   {
     InvShiftRows(state);
     InvSubBytes(state);
-    AddRoundKey(round, state, RoundKey);
+    AddRoundKey(round, state, RoundKey, &hamstate, &pcode);
     if (round == 0) {
       break;
     }
