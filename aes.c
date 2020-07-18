@@ -122,6 +122,7 @@ static const uint8_t Rcon[11] = {
 
 // the constant hamming code LUTs
 static const uint8_t h_rd[256] = { 
+  //0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
   0x02, 0x0e, 0x09, 0x05, 0x03, 0x0b, 0x0e, 0x00, 0x08, 0x03, 0x07, 0x01, 0x0f, 0x03, 0x0d, 0x0a, 
   0x02, 0x01, 0x0c, 0x0d, 0x0a, 0x0e, 0x01, 0x0e, 0x05, 0x0d, 0x07, 0x08, 0x0e, 0x0f, 0x0f, 0x06, 
   0x0f, 0x01, 0x0c, 0x0e, 0x00, 0x0a, 0x05, 0x0a, 0x0d, 0x0c, 0x06, 0x0d, 0x01, 0x01, 0x0b, 0x08, 
@@ -138,25 +139,48 @@ static const uint8_t h_rd[256] = {
   0x02, 0x09, 0x02, 0x04, 0x03, 0x0e, 0x06, 0x01, 0x0f, 0x0e, 0x0f, 0x0e, 0x04, 0x05, 0x01, 0x03, 
   0x03, 0x07, 0x0b, 0x0d, 0x06, 0x02, 0x0d, 0x07, 0x05, 0x0f, 0x07, 0x0a, 0x07, 0x02, 0x0f, 0x0a, 
   0x00, 0x09, 0x06, 0x0f, 0x06, 0x08, 0x07, 0x05, 0x09, 0x08, 0x09, 0x02, 0x04, 0x01, 0x03, 0x06 };
+
 /*
 static const uint8_t h_2rd[256] = { 
-  0x05, 0x06, 0x08, 0x08, 0x09, 0x06, 0x08, 0x0b, 0x0d, 0x03, 0x06, 0x05, 0x04, 0x0a, 0x09, 0x06, 
-  0x0b, 0x06, 0x0b, 0x08, 0x0a, 0x05, 0x05, 0x0b, 0x09, 0x0b, 0x08, 0x0a, 0x0b, 0x08, 0x05, 0x06, 
-  0x0a, 0x04, 0x0b, 0x0e, 0x05, 0x08, 0x04, 0x0b, 0x0e, 0x0b, 0x09, 0x09, 0x05, 0x0b, 0x0e, 0x0e, 
-  0x03, 0x09, 0x0e, 0x0b, 0x0d, 0x0b, 0x0d, 0x0b, 0x0e, 0x0d, 0x05, 0x0b, 0x0a, 0x05, 0x0b, 0x06, 
-  0x0d, 0x08, 0x0e, 0x0e, 0x05, 0x06, 0x05, 0x06, 0x0e, 0x06, 0x09, 0x09, 0x0e, 0x09, 0x06, 0x06, 
-  0x05, 0x0b, 0x00, 0x0a, 0x03, 0x0a, 0x0b, 0x06, 0x05, 0x09, 0x0a, 0x05, 0x0e, 0x0e, 0x0e, 0x0a, 
-  0x08, 0x04, 0x0b, 0x04, 0x0e, 0x05, 0x05, 0x08, 0x0e, 0x0a, 0x03, 0x0b, 0x0d, 0x05, 0x0a, 0x08, 
-  0x0e, 0x0b, 0x03, 0x09, 0x08, 0x09, 0x0e, 0x0a, 0x09, 0x09, 0x09, 0x0d, 0x03, 0x07, 0x0a, 0x0b, 
-  0x09, 0x0d, 0x0e, 0x09, 0x08, 0x09, 0x0d, 0x05, 0x08, 0x09, 0x08, 0x06, 0x0e, 0x06, 0x0e, 0x06, 
-  0x0d, 0x06, 0x06, 0x09, 0x0d, 0x0e, 0x06, 0x06, 0x0e, 0x0a, 0x0b, 0x0d, 0x0a, 0x06, 0x0e, 0x0a, 
-  0x08, 0x0e, 0x05, 0x0d, 0x0e, 0x0d, 0x0d, 0x05, 0x08, 0x09, 0x0b, 0x0e, 0x08, 0x0b, 0x0b, 0x06, 
-  0x0a, 0x08, 0x06, 0x06, 0x0b, 0x09, 0x05, 0x0b, 0x05, 0x05, 0x09, 0x09, 0x05, 0x06, 0x09, 0x03, 
-  0x09, 0x05, 0x0e, 0x05, 0x0e, 0x0b, 0x0b, 0x0b, 0x0b, 0x0a, 0x05, 0x06, 0x05, 0x0a, 0x0b, 0x08, 
-  0x0e, 0x06, 0x09, 0x05, 0x0d, 0x0d, 0x0a, 0x0e, 0x0e, 0x05, 0x06, 0x09, 0x08, 0x08, 0x05, 0x09, 
-  0x0b, 0x09, 0x08, 0x0d, 0x05, 0x09, 0x0b, 0x08, 0x09, 0x05, 0x0b, 0x09, 0x09, 0x05, 0x0d, 0x04, 
+  //0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
+  0x05, 0x06, 0x08, 0x08, 0x09, 0x06, 0x08, 0x0b, 0x0d, 0x03, 0x06, 0x05, 0x04, 0x0a, 0x09, 0x06,
+  0x0b, 0x06, 0x0b, 0x08, 0x0a, 0x05, 0x05, 0x0b, 0x09, 0x0b, 0x08, 0x0a, 0x0b, 0x08, 0x05, 0x06,
+  0x0a, 0x04, 0x0b, 0x0e, 0x05, 0x08, 0x04, 0x0b, 0x0e, 0x0b, 0x09, 0x09, 0x05, 0x0b, 0x0e, 0x0e,
+  0x03, 0x09, 0x0e, 0x0b, 0x0d, 0x0b, 0x0d, 0x0b, 0x0e, 0x0d, 0x05, 0x0b, 0x0a, 0x05, 0x0b, 0x06,
+  0x0d, 0x08, 0x0e, 0x0e, 0x05, 0x06, 0x05, 0x06, 0x0e, 0x06, 0x09, 0x09, 0x0e, 0x09, 0x06, 0x06,
+  0x05, 0x0b, 0x00, 0x0a, 0x03, 0x0a, 0x0b, 0x06, 0x05, 0x09, 0x0a, 0x05, 0x0e, 0x0e, 0x0e, 0x0a,
+  0x08, 0x04, 0x0b, 0x04, 0x0e, 0x05, 0x05, 0x08, 0x0e, 0x0a, 0x03, 0x0b, 0x0d, 0x05, 0x0a, 0x08,
+  0x0e, 0x0b, 0x03, 0x09, 0x08, 0x09, 0x0e, 0x0a, 0x09, 0x09, 0x09, 0x0d, 0x03, 0x07, 0x0a, 0x0b,
+  0x09, 0x0d, 0x0e, 0x09, 0x08, 0x09, 0x0d, 0x05, 0x08, 0x09, 0x08, 0x06, 0x0e, 0x06, 0x0e, 0x06,
+  0x0d, 0x06, 0x06, 0x09, 0x0d, 0x0e, 0x06, 0x06, 0x0e, 0x0a, 0x0b, 0x0d, 0x0a, 0x06, 0x0e, 0x0a,
+  0x08, 0x0e, 0x05, 0x0d, 0x0e, 0x0d, 0x0d, 0x05, 0x08, 0x09, 0x0b, 0x0e, 0x08, 0x0b, 0x0b, 0x06,
+  0x0a, 0x08, 0x06, 0x06, 0x0b, 0x09, 0x05, 0x0b, 0x05, 0x05, 0x09, 0x09, 0x05, 0x06, 0x09, 0x03,
+  0x09, 0x05, 0x0e, 0x05, 0x0e, 0x0b, 0x0b, 0x0b, 0x0b, 0x0a, 0x05, 0x06, 0x05, 0x0a, 0x0b, 0x08,
+  0x0e, 0x06, 0x09, 0x05, 0x0d, 0x0d, 0x0a, 0x0e, 0x0e, 0x05, 0x06, 0x09, 0x08, 0x08, 0x05, 0x09,
+  0x0b, 0x09, 0x08, 0x0d, 0x05, 0x09, 0x0b, 0x08, 0x09, 0x05, 0x0b, 0x09, 0x09, 0x05, 0x0d, 0x04,
   0x08, 0x08, 0x08, 0x0e, 0x04, 0x09, 0x0d, 0x0e, 0x0d, 0x0b, 0x05, 0x05, 0x08, 0x0e, 0x0a, 0x0e };
+
+
+static const uint8_t h_3rd[256] = { 
+  //0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
+  0x0c, 0x09, 0x08, 0x03, 0x0f, 0x0b, 0x07, 0x01, 0x04, 0x0e, 0x00, 0x0d, 0x04, 0x01, 0x08, 0x06,
+  0x0c, 0x0d, 0x0a, 0x07, 0x08, 0x07, 0x0c, 0x07, 0x0c, 0x07, 0x01, 0x04, 0x06, 0x05, 0x0a, 0x03,
+  0x0b, 0x02, 0x0b, 0x08, 0x00, 0x09, 0x0d, 0x08, 0x08, 0x0b, 0x0d, 0x09, 0x0c, 0x0c, 0x0a, 0x0a,
+  0x0c, 0x09, 0x0a, 0x05, 0x0f, 0x09, 0x02, 0x02, 0x0a, 0x00, 0x05, 0x07, 0x0e, 0x06, 0x09, 0x00,
+  0x09, 0x03, 0x07, 0x07, 0x09, 0x09, 0x01, 0x09, 0x06, 0x05, 0x0f, 0x07, 0x05, 0x09, 0x01, 0x09,
+  0x08, 0x05, 0x00, 0x0a, 0x0c, 0x0c, 0x0f, 0x0f, 0x05, 0x02, 0x02, 0x0d, 0x09, 0x0d, 0x09, 0x0e,
+  0x0b, 0x02, 0x06, 0x06, 0x00, 0x03, 0x02, 0x07, 0x04, 0x0e, 0x08, 0x0f, 0x0e, 0x0f, 0x00, 0x0e,
+  0x00, 0x0f, 0x06, 0x08, 0x05, 0x08, 0x03, 0x05, 0x0a, 0x05, 0x04, 0x02, 0x08, 0x0a, 0x01, 0x03,
+  0x06, 0x0b, 0x0e, 0x04, 0x03, 0x07, 0x0a, 0x02, 0x0f, 0x03, 0x01, 0x01, 0x06, 0x0b, 0x01, 0x04,
+  0x0a, 0x0b, 0x0b, 0x00, 0x04, 0x03, 0x0d, 0x02, 0x02, 0x0c, 0x06, 0x04, 0x08, 0x0d, 0x01, 0x0a,
+  0x0f, 0x0c, 0x0b, 0x0f, 0x0f, 0x04, 0x00, 0x05, 0x0b, 0x0d, 0x02, 0x02, 0x03, 0x0f, 0x03, 0x0b,
+  0x05, 0x04, 0x0e, 0x0f, 0x00, 0x09, 0x05, 0x00, 0x01, 0x0a, 0x0b, 0x00, 0x08, 0x0d, 0x0a, 0x07,
+  0x0e, 0x05, 0x0e, 0x0f, 0x03, 0x0d, 0x0d, 0x07, 0x08, 0x0e, 0x0e, 0x05, 0x07, 0x04, 0x04, 0x0a,
+  0x02, 0x07, 0x03, 0x0e, 0x01, 0x06, 0x03, 0x03, 0x04, 0x06, 0x04, 0x08, 0x01, 0x0d, 0x0d, 0x0e,
+  0x01, 0x00, 0x0a, 0x06, 0x03, 0x02, 0x06, 0x01, 0x0c, 0x0b, 0x0f, 0x06, 0x00, 0x0c, 0x0b, 0x06,
+  0x0e, 0x07, 0x0c, 0x05, 0x0c, 0x0b, 0x0e, 0x0d, 0x08, 0x04, 0x09, 0x0d, 0x01, 0x02, 0x00, 0x0c };
 */
+
 /*
  * Jordan Goulder points out in PR #12 (https://github.com/kokke/tiny-AES-C/pull/12),
  * that you can remove most of the elements in the Rcon array, because they are unused.
@@ -186,8 +210,12 @@ static uint8_t getSBoxInvert(uint8_t num)
 */
 #define getSBoxInvert(num) (rsbox[(num)])
 
-// This predicts the hamming code using the table
+// The respective tables help predict the hamming codes for the aes transforms
 #define getHBoxValue(num) (h_rd[(num)])
+
+#define getH2BoxValue(num) (h_2rd[(num)])
+
+#define getH3BoxValue(num) (h_3rd[(num)])
 
 // bits in the byte are numbered 0-7
 /*
@@ -236,13 +264,28 @@ static void encodeState(state_t* state, hamstate_t* hamstate)
     for (j = 0; j < 4; ++j)
     {
       (*hamstate)[j][i] = hamming_encode((*state)[j][i]);
+      //printf("0x%hhx, ", (*hamstate)[j][i]);
     }
+    //printf("\n");
   }
+  //printf("\n\n\n\n");
   //(*hamstate)[0][0] = (*hamstate)[0][0] >> 0x01;
 }
 
 static void predictSub(state_t* state, hamstate_t* pcode)
 {
+  /*
+  uint8_t r, c;
+  printf("\nState:\n");
+  for (r = 0; r < 4; ++r)
+  {
+    for (c = 0; c < 4; ++c)
+    {
+      printf("0x%hhx, ", (*state)[c][r]);
+    }
+    printf("\n");
+  }
+  */
   uint8_t i, j;
   for (i = 0; i < 4; ++i)
   {
@@ -252,46 +295,81 @@ static void predictSub(state_t* state, hamstate_t* pcode)
     }
   }
 }
+
+static void predictShift(hamstate_t* pcode)
+{
+  uint8_t temp;
+
+  // Rotate first row 1 columns to left  
+  temp           = (*pcode)[0][1];
+  (*pcode)[0][1] = (*pcode)[1][1];
+  (*pcode)[1][1] = (*pcode)[2][1];
+  (*pcode)[2][1] = (*pcode)[3][1];
+  (*pcode)[3][1] = temp;
+
+  // Rotate second row 2 columns to left  
+  temp           = (*pcode)[0][2];
+  (*pcode)[0][2] = (*pcode)[2][2];
+  (*pcode)[2][2] = temp;
+
+  temp           = (*pcode)[1][2];
+  (*pcode)[1][2] = (*pcode)[3][2];
+  (*pcode)[3][2] = temp;
+
+  // Rotate third row 3 columns to left
+  temp           = (*pcode)[0][3];
+  (*pcode)[0][3] = (*pcode)[3][3];
+  (*pcode)[3][3] = (*pcode)[2][3];
+  (*pcode)[2][3] = (*pcode)[1][3];
+  (*pcode)[1][3] = temp;
+}
+
 /*
-static void predictShift(state_t* state, hamstate_t* pcode)
-{
-  //
-}
-
-static void predictMoveCols(state_t* state, hamstate_t* pcode)
-{
-  //
-}
-
 static void predictAddKey(state_t* state, hamstate_t* pcode)
 {
   //
 }
 */
 
-static void compareCodes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
+static void compareCodes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode, char* transform)
 {
   /*
-  for (i = 0; i < 4; ++i)
+  uint8_t r, c;
+  printf("\n%s State:\n", transform);
+  for (r = 0; r < 4; ++r)
   {
-    for (j = 0; j < 4; ++j)
+    for (c = 0; c < 4; ++c)
     {
-      printf("0x0%hhx, ", (*hamstate)[j][i]);
+      printf("0x%hhx, ", (*state)[c][r] );
     }
+    printf("\n");
   }
 
-  for (i = 0; i < 4; ++i)
+  printf("\nHamState:\n");
+  for (r = 0; r < 4; ++r)
   {
-    for (j = 0; j < 4; ++j)
+    for (c = 0; c < 4; ++c)
     {
-      printf("0x0%hhx, ", (*pcode)[j][i]);
+      printf("0x0%hhx, ", (*hamstate)[c][r] );
     }
+    printf("\n");
   }
+
+  printf("\nPredicted Codes:\n");
+  for (r = 0; r < 4; ++r)
+  {
+    for (c = 0; c < 4; ++c)
+    {
+      printf("0x0%hhx, ", (*pcode)[c][r] );
+    }
+    printf("\n");
+  }
+  printf("\n");
   */
-
-  if(0 != memcmp((char*) hamstate, (char*) pcode, 16))
+  
+  if(0 != memcmp((char*) hamstate, (char*) pcode, sizeof(hamstate_t)))
   {
-    printf("Codes do not agree\n");
+    printf("Codes do not agree in %s\n", transform);
     exit(2);
   }
   /*
@@ -408,8 +486,10 @@ static void AddRoundKey(uint8_t round, state_t* state, const uint8_t* RoundKey)
 
 // The SubBytes Function Substitutes the values in the
 // state matrix with values in an S-box.
-static void SubBytes(state_t* state)
+static void SubBytes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
 {
+  //compareCodes(state, hamstate, pcode, "Pre-SubBytes");
+  predictSub(state, pcode);
 
   uint8_t i, j;
   for (i = 0; i < 4; ++i)
@@ -419,14 +499,18 @@ static void SubBytes(state_t* state)
       (*state)[j][i] = getSBoxValue((*state)[j][i]);
     }
   }
-
+  
+  encodeState(state, hamstate);
+  compareCodes(state, hamstate, pcode, "SubBytes");
 }
 
 // The ShiftRows() function shifts the rows in the state to the left.
 // Each row is shifted with different offset.
 // Offset = Row number. So the first row is not shifted.
-static void ShiftRows(state_t* state)
+static void ShiftRows(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
 {
+  predictShift(pcode);
+  
   uint8_t temp;
 
   // Rotate first row 1 columns to left  
@@ -451,27 +535,14 @@ static void ShiftRows(state_t* state)
   (*state)[3][3] = (*state)[2][3];
   (*state)[2][3] = (*state)[1][3];
   (*state)[1][3] = temp;
+
+  encodeState(state, hamstate);
+  compareCodes(state, hamstate, pcode, "ShiftRows");
 }
 
 static uint8_t xtime(uint8_t x)
 {
   return ((x<<1) ^ (((x>>7) & 1) * 0x1b));
-}
-
-// MixColumns function mixes the columns of the state matrix
-static void MixColumns(state_t* state)
-{
-  uint8_t i;
-  uint8_t Tmp, Tm, t;
-  for (i = 0; i < 4; ++i)
-  {  
-    t   = (*state)[i][0];
-    Tmp = (*state)[i][0] ^ (*state)[i][1] ^ (*state)[i][2] ^ (*state)[i][3] ;
-    Tm  = (*state)[i][0] ^ (*state)[i][1] ; Tm = xtime(Tm);  (*state)[i][0] ^= Tm ^ Tmp ;
-    Tm  = (*state)[i][1] ^ (*state)[i][2] ; Tm = xtime(Tm);  (*state)[i][1] ^= Tm ^ Tmp ;
-    Tm  = (*state)[i][2] ^ (*state)[i][3] ; Tm = xtime(Tm);  (*state)[i][2] ^= Tm ^ Tmp ;
-    Tm  = (*state)[i][3] ^ t ;              Tm = xtime(Tm);  (*state)[i][3] ^= Tm ^ Tmp ;
-  }
 }
 
 // Multiply is used to multiply numbers in the field GF(2^8)
@@ -496,6 +567,176 @@ static uint8_t Multiply(uint8_t x, uint8_t y)
       ((y>>4 & 1) * xtime(xtime(xtime(xtime(x))))))   \
 
 #endif
+
+static void predictMixCols(state_t* state, hamstate_t* pcode)
+{
+  memset(pcode, 0x00, sizeof(hamstate_t));
+  /*
+  hamstate_t temp = {
+    {0x00, 0x00, 0x00, 0x00},
+    {0x00, 0x00, 0x00, 0x00},
+    {0x00, 0x00, 0x00, 0x00},
+    {0x00, 0x00, 0x00, 0x00} };
+    */
+  //printf("0x%hhx\n", hamming_encode(0xb9));
+  //uint8_t r, c;
+  for(uint8_t c = 0; c < 4; ++c)
+  {
+    //printf("Round: %u\n", c);
+
+    /*
+    uint8_t r;
+    printf("Operating on State Col %u:\n", c);
+    for (r = 0; r < 4; ++r)
+    {
+      printf("0x%hhx, ", (*state)[c][r]);
+      printf("\n");
+    }
+    */
+
+    /*
+    //printf("Pcode Before: 0x%hhx, 0x%hhx, 0x%hhx, 0x%hhx\n", (*pcode[c][0]), (*pcode[c][1]), (*pcode[c][2]), (*pcode[c][3]));
+    (*pcode[0][c]) = (Multiply((*state)[c][0], 0x02)) ^ (Multiply((*state)[c][1], 0x03)) ^ ((*state)[c][2]) ^ ((*state)[c][3]);
+    (*pcode[1][c]) = ((*state)[c][0]) ^ (Multiply((*state)[c][1], 0x02)) ^ (Multiply((*state)[c][2], 0x03)) ^ ((*state)[c][3]);
+    (*pcode[2][c]) = ((*state)[c][0]) ^ ((*state)[c][1]) ^ (Multiply((*state)[c][2], 0x02)) ^ (Multiply((*state)[c][3], 0x03));
+    (*pcode[3][c]) = (Multiply((*state)[c][0], 0x03)) ^ ((*state)[c][1]) ^ ((*state)[c][2]) ^ (Multiply((*state)[c][3], 0x02));
+    printf("Line After:\n0x%hhx, 0x%hhx, 0x%hhx, 0x%hhx\n\n", (*pcode[0][c]), (*pcode[1][c]), (*pcode[2][c]), (*pcode[3][c]));
+    printf("Pcode After:\n0x%hhx, 0x%hhx, 0x%hhx, 0x%hhx\n", (*pcode[0][0]), (*pcode[0][1]), (*pcode[0][2]), (*pcode[0][3]));
+    printf("0x%hhx, 0x%hhx, 0x%hhx, 0x%hhx\n", (*pcode[1][0]), (*pcode[1][1]), (*pcode[1][2]), (*pcode[1][3]));
+    printf("0x%hhx, 0x%hhx, 0x%hhx, 0x%hhx\n", (*pcode[2][0]), (*pcode[2][1]), (*pcode[2][2]), (*pcode[2][3]));
+    printf("0x%hhx, 0x%hhx, 0x%hhx, 0x%hhx\n\n", (*pcode[3][0]), (*pcode[3][1]), (*pcode[3][2]), (*pcode[3][3]));
+
+    printf("Pcode Before: 0x%hhx, 0x%hhx, 0x%hhx, 0x%hhx\n", (*pcode[c][0]), (*pcode[c][1]), (*pcode[c][2]), (*pcode[c][3]));
+    (*pcode[c][0]) = (Multiply((*state)[c][0], 0x02)) ^ (Multiply((*state)[c][1], 0x03)) ^ ((*state)[c][2]) ^ ((*state)[c][3]);
+    (*pcode[c][1]) = ((*state)[c][0]) ^ (Multiply((*state)[c][1], 0x02)) ^ (Multiply((*state)[c][2], 0x03)) ^ ((*state)[c][3]);
+    (*pcode[c][2]) = ((*state)[c][0]) ^ ((*state)[c][1]) ^ (Multiply((*state)[c][2], 0x02)) ^ (Multiply((*state)[c][3], 0x03));
+    (*pcode[c][3]) = (Multiply((*state)[c][0], 0x03)) ^ ((*state)[c][1]) ^ ((*state)[c][2]) ^ (Multiply((*state)[c][3], 0x02));
+    printf("Pcode After: 0x%hhx, 0x%hhx, 0x%hhx, 0x%hhx\n", (*pcode[c][0]), (*pcode[c][1]), (*pcode[c][2]), (*pcode[c][3]));
+    */
+    
+    //printf("Pcode Before: 0x%hhx, 0x%hhx, 0x%hhx, 0x%hhx\n", (*pcode[c][0]), (*pcode[c][1]), (*pcode[c][2]), (*pcode[c][3]));
+    (*pcode)[c][0] = hamming_encode(Multiply((*state)[c][0], 0x02)) ^ hamming_encode(Multiply((*state)[c][1], 0x03)) ^ hamming_encode((*state)[c][2]) ^ hamming_encode((*state)[c][3]);
+    (*pcode)[c][1] = hamming_encode((*state)[c][0]) ^ hamming_encode(Multiply((*state)[c][1], 0x02)) ^ hamming_encode(Multiply((*state)[c][2], 0x03)) ^ hamming_encode((*state)[c][3]);
+    (*pcode)[c][2] = hamming_encode((*state)[c][0]) ^ hamming_encode((*state)[c][1]) ^ hamming_encode(Multiply((*state)[c][2], 0x02)) ^ hamming_encode(Multiply((*state)[c][3], 0x03));
+    (*pcode)[c][3] = hamming_encode(Multiply((*state)[c][0], 0x03)) ^ hamming_encode((*state)[c][1]) ^ hamming_encode((*state)[c][2]) ^ hamming_encode(Multiply((*state)[c][3], 0x02));
+    //printf("Pcode After: 0x%hhx, 0x%hhx, 0x%hhx, 0x%hhx\n", (*pcode[c][0]), (*pcode[c][1]), (*pcode[c][2]), (*pcode[c][3]));
+    //printf("Line: (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx\n", pcode[0][c], (*pcode[0][c]), pcode[1][c], (*pcode[1][c]), pcode[2][c], (*pcode[2][c]), pcode[3][c], (*pcode[3][c]));
+
+    //-----------------------------------------------
+    // Code for hamming prediction using the tables
+    //-----------------------------------------------
+
+    /*
+    //printf("First Entry: (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx\n", (*state)[c][0], getH2BoxValue((*state)[c][0]), (*state)[c][1], getH3BoxValue((*state)[c][1]), (*state)[c][2], getHBoxValue((*state)[c][2]), (*state)[c][3], getHBoxValue((*state)[c][3]));
+    (*pcode)[c][0] = getH2BoxValue((*state)[c][0]) ^ getH3BoxValue((*state)[c][1]) ^ getHBoxValue((*state)[c][2]) ^ getHBoxValue((*state)[c][3]);
+    (*pcode)[c][1] = getHBoxValue((*state)[c][0]) ^ getH2BoxValue((*state)[c][1]) ^ getH3BoxValue((*state)[c][2]) ^ getHBoxValue((*state)[c][3]);
+    (*pcode)[c][2] = getHBoxValue((*state)[c][0]) ^ getHBoxValue((*state)[c][1]) ^ getH2BoxValue((*state)[c][2]) ^ getH3BoxValue((*state)[c][3]);
+    (*pcode)[c][3] = getH3BoxValue((*state)[c][0]) ^ getHBoxValue((*state)[c][1]) ^ getHBoxValue((*state)[c][2]) ^ getH2BoxValue((*state)[c][3]);
+    //printf("0x%hhx, 0x%hhx, 0x%hhx, 0x%hhx\n", (*pcode[0][j]), (*pcode[1][j]), (*pcode[2][j]), (*pcode[3][j]));
+    
+    printf("First Entry: (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx ^ (0x%hhx) 0x%hhx\n", (*state)[0][c], getH2BoxValue((*state)[0][c]), (*state)[1][c], getH3BoxValue((*state)[1][c]), (*state)[2][c], getHBoxValue((*state)[2][c]), (*state)[3][c], getHBoxValue((*state)[3][c]));
+    (*pcode[0][c]) = getH2BoxValue((*state)[0][c]) ^ getH3BoxValue((*state)[1][c]) ^ getHBoxValue((*state)[2][c]) ^ getHBoxValue((*state)[3][c]);
+    (*pcode[1][c]) = getHBoxValue((*state)[0][c]) ^ getH2BoxValue((*state)[1][c]) ^ getH3BoxValue((*state)[2][c]) ^ getHBoxValue((*state)[3][c]);
+    (*pcode[2][c]) = getHBoxValue((*state)[0][c]) ^ getHBoxValue((*state)[1][c]) ^ getH2BoxValue((*state)[2][c]) ^ getH3BoxValue((*state)[3][c]);
+    (*pcode[3][c]) = getH3BoxValue((*state)[0][c]) ^ getHBoxValue((*state)[1][c]) ^ getHBoxValue((*state)[2][c]) ^ getH2BoxValue((*state)[3][c]);
+    //temp[c][0] = (*pcode[0][c]);
+    //temp[c][1] = (*pcode[1][c]);
+    //temp[c][2] = (*pcode[2][c]);
+    //temp[c][3] = (*pcode[3][c]);
+    */
+
+  }
+/*
+    (*pcode[0][0]) = hamming_encode(Multiply((*state)[0][0], 0x02)) ^ hamming_encode(Multiply((*state)[0][1], 0x03)) ^ hamming_encode((*state)[0][2]) ^ hamming_encode((*state)[0][3]);
+    (*pcode[1][0]) = hamming_encode((*state)[0][0]) ^ hamming_encode(Multiply((*state)[0][1], 0x02)) ^ hamming_encode(Multiply((*state)[0][2], 0x03)) ^ hamming_encode((*state)[0][3]);
+    (*pcode[2][0]) = hamming_encode((*state)[0][0]) ^ hamming_encode((*state)[0][1]) ^ hamming_encode(Multiply((*state)[0][2], 0x02)) ^ hamming_encode(Multiply((*state)[0][3], 0x03));
+    (*pcode[3][0]) = hamming_encode(Multiply((*state)[0][0], 0x03)) ^ hamming_encode((*state)[0][1]) ^ hamming_encode((*state)[0][2]) ^ hamming_encode(Multiply((*state)[0][3], 0x02));
+    printf("\nLine: (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx\n", pcode[0][0], (*pcode[0][0]), pcode[1][0], (*pcode[1][0]), pcode[2][0], (*pcode[2][0]), pcode[3][0], (*pcode[3][0]));
+
+    (*pcode[0][1]) = hamming_encode(Multiply((*state)[1][0], 0x02)) ^ hamming_encode(Multiply((*state)[1][1], 0x03)) ^ hamming_encode((*state)[1][2]) ^ hamming_encode((*state)[1][3]);
+    (*pcode[1][1]) = hamming_encode((*state)[1][0]) ^ hamming_encode(Multiply((*state)[1][1], 0x02)) ^ hamming_encode(Multiply((*state)[1][2], 0x03)) ^ hamming_encode((*state)[1][3]);
+    (*pcode[2][1]) = hamming_encode((*state)[1][0]) ^ hamming_encode((*state)[1][1]) ^ hamming_encode(Multiply((*state)[1][2], 0x02)) ^ hamming_encode(Multiply((*state)[1][3], 0x03));
+    (*pcode[3][1]) = hamming_encode(Multiply((*state)[1][0], 0x03)) ^ hamming_encode((*state)[1][1]) ^ hamming_encode((*state)[1][2]) ^ hamming_encode(Multiply((*state)[1][3], 0x02));
+    printf("Line: (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx\n", pcode[0][1], (*pcode[0][1]), pcode[1][1], (*pcode[1][1]), pcode[2][1], (*pcode[2][1]), pcode[3][1], (*pcode[3][1]));
+
+    (*pcode[0][2]) = hamming_encode(Multiply((*state)[2][0], 0x02)) ^ hamming_encode(Multiply((*state)[2][1], 0x03)) ^ hamming_encode((*state)[2][2]) ^ hamming_encode((*state)[2][3]);
+    (*pcode[1][2]) = hamming_encode((*state)[2][0]) ^ hamming_encode(Multiply((*state)[2][1], 0x02)) ^ hamming_encode(Multiply((*state)[2][2], 0x03)) ^ hamming_encode((*state)[2][3]);
+    (*pcode[2][2]) = hamming_encode((*state)[2][0]) ^ hamming_encode((*state)[2][1]) ^ hamming_encode(Multiply((*state)[2][2], 0x02)) ^ hamming_encode(Multiply((*state)[2][3], 0x03));
+    (*pcode[3][2]) = hamming_encode(Multiply((*state)[2][0], 0x03)) ^ hamming_encode((*state)[2][1]) ^ hamming_encode((*state)[2][2]) ^ hamming_encode(Multiply((*state)[2][3], 0x02));
+    printf("Line: (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx\n", pcode[0][2], (*pcode[0][2]), pcode[1][2], (*pcode[1][2]), pcode[2][2], (*pcode[2][2]), pcode[3][2], (*pcode[3][2]));
+
+    (*pcode[0][3]) = hamming_encode(Multiply((*state)[3][0], 0x02)) ^ hamming_encode(Multiply((*state)[3][1], 0x03)) ^ hamming_encode((*state)[3][2]) ^ hamming_encode((*state)[3][3]);
+    (*pcode[1][3]) = hamming_encode((*state)[3][0]) ^ hamming_encode(Multiply((*state)[3][1], 0x02)) ^ hamming_encode(Multiply((*state)[3][2], 0x03)) ^ hamming_encode((*state)[3][3]);
+    (*pcode[2][3]) = hamming_encode((*state)[3][0]) ^ hamming_encode((*state)[3][1]) ^ hamming_encode(Multiply((*state)[3][2], 0x02)) ^ hamming_encode(Multiply((*state)[3][3], 0x03));
+    (*pcode[3][3]) = hamming_encode(Multiply((*state)[3][0], 0x03)) ^ hamming_encode((*state)[3][1]) ^ hamming_encode((*state)[3][2]) ^ hamming_encode(Multiply((*state)[3][3], 0x02));
+    printf("Line: (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx\n", pcode[0][3], (*pcode[0][3]), pcode[1][3], (*pcode[1][3]), pcode[2][3], (*pcode[2][3]), pcode[3][3], (*pcode[3][3]));
+*/
+    //printf("\nPredict code:\n(%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx\n", pcode[0][0], (*pcode[0][0]), pcode[0][1], (*pcode[0][1]), pcode[0][2], (*pcode[0][2]), pcode[0][3], (*pcode[0][3]));
+    //printf("(%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx\n", pcode[1][0], (*pcode[1][0]), pcode[1][1], (*pcode[1][1]), pcode[1][2], (*pcode[1][2]), pcode[1][3], (*pcode[1][3]));
+    //printf("(%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx\n", pcode[2][0], (*pcode[2][0]), pcode[2][1], (*pcode[2][1]), pcode[2][2], (*pcode[2][2]), pcode[2][3], (*pcode[2][3]));
+    //printf("(%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx\n\n", pcode[3][0], (*pcode[3][0]), pcode[3][1], (*pcode[3][1]), pcode[3][2], (*pcode[3][2]), pcode[3][3], (*pcode[3][3]));
+  /*
+  for(uint8_t c = 0; c < 4; ++c)
+  {
+    temp[c][0] = (*pcode[0][c]);
+    temp[c][1] = (*pcode[1][c]);
+    temp[c][2] = (*pcode[2][c]);
+    temp[c][3] = (*pcode[3][c]);
+  }
+  */
+
+  /*
+  printf("%ld, %ld\n", sizeof(hamstate_t), sizeof(temp));
+  
+  memcpy(pcode, &temp, sizeof(hamstate_t));
+
+  uint8_t r, c;
+  printf("\nTemp code:\n");
+  for (r = 0; r < 4; ++r)
+  {
+    for (c = 0; c < 4; ++c)
+    {
+      //temp[c][r] = (*pcode)[c][r];
+      printf("0x%hhx, ", temp[c][r]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+
+  printf("\nPredict code:\n");
+  for (r = 0; r < 4; ++r)
+  {
+    for (c = 0; c < 4; ++c)
+    {
+      printf("(%p) 0x%hhx, ", (pcode)[c][r], (*pcode[c][r]) );
+    }
+    printf("\n");
+    //printf("(%p) 0x%hhx\n\n", pcode[1][1], (*pcode[1][1]));
+  }
+  printf("\n");
+  */
+}
+
+// MixColumns function mixes the columns of the state matrix
+static void MixColumns(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
+{
+  predictMixCols(state, pcode);
+
+  uint8_t i;
+  uint8_t Tmp, Tm, t;
+  for (i = 0; i < 4; ++i)
+  {  
+    t   = (*state)[i][0];
+    Tmp = (*state)[i][0] ^ (*state)[i][1] ^ (*state)[i][2] ^ (*state)[i][3] ;
+    Tm  = (*state)[i][0] ^ (*state)[i][1] ; Tm = xtime(Tm);  (*state)[i][0] ^= Tm ^ Tmp ;
+    Tm  = (*state)[i][1] ^ (*state)[i][2] ; Tm = xtime(Tm);  (*state)[i][1] ^= Tm ^ Tmp ;
+    Tm  = (*state)[i][2] ^ (*state)[i][3] ; Tm = xtime(Tm);  (*state)[i][2] ^= Tm ^ Tmp ;
+    Tm  = (*state)[i][3] ^ t ;              Tm = xtime(Tm);  (*state)[i][3] ^= Tm ^ Tmp ;
+  }
+
+  encodeState(state, hamstate);
+  compareCodes(state, hamstate, pcode, "MixColumns");
+}
 
 #if (defined(CBC) && CBC == 1) || (defined(ECB) && ECB == 1)
 // MixColumns function mixes the columns of the state matrix.
@@ -577,20 +818,27 @@ static void Cipher(state_t* state, const uint8_t* RoundKey)
   // Last one without MixColumns()
 
   hamstate_t hamstate, pcode;
+  
+  /*
+  hamstate_t hamstate = {
+    {0x00, 0x00, 0x00, 0x00},
+    {0x00, 0x00, 0x00, 0x00},
+    {0x00, 0x00, 0x00, 0x00},
+    {0x00, 0x00, 0x00, 0x00} };
+  hamstate_t pcode = {
+    {0x00, 0x00, 0x00, 0x00},
+    {0x00, 0x00, 0x00, 0x00},
+    {0x00, 0x00, 0x00, 0x00},
+    {0x00, 0x00, 0x00, 0x00} };
+  */
   for (round = 1; ; ++round)
   {
-    predictSub(state, &pcode);
-
-    SubBytes(state);
-    
-    encodeState(state, &hamstate);
-    compareCodes(state, &hamstate, &pcode);
-    
-    ShiftRows(state);
+    SubBytes(state, &hamstate, &pcode); 
+    ShiftRows(state, &hamstate, &pcode);
     if (round == Nr) {
       break;
     }
-    MixColumns(state);
+    MixColumns(state, &hamstate, &pcode);
     AddRoundKey(round, state, RoundKey);
   }
   // Add round key to last round
@@ -700,6 +948,11 @@ void AES_CBC_decrypt_buffer(struct AES_ctx* ctx, uint8_t* buf,  uint32_t length)
 void AES_CTR_xcrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, uint32_t length)
 {
   //hamstate_t hamstate, pcode;
+  //printf("Actual Answer. Original: 0x%hhx, Original x2: 0x%hhx, Ham Code: 0x%hhx\n", 0xb9, xtime(0xb9), hamming_encode(xtime(0xb9)));
+  //printf("Actual Answer. Original: 0x%hhx, Original x2: 0x%hhx, Ham Code: 0x%hhx\n", 0x39, (0x39 << 1), hamming_encode((0x39 << 1)));
+  //printf("Actual Answer. Original: 0x%hhx, Original x2: 0x%hhx, Ham Code: 0x%hhx\n", 0xdf, xtime(0xdf), hamming_encode(xtime(0xdf)));
+  //printf("Actual Answer. Original: 0x%hhx, Original x2: 0x%hhx, Ham Code: 0x%hhx\n\n\n", 0x2e, (0x2e << 1), hamming_encode((0x2e << 1)));
+  //printf("Actual Answer. Original: 0x%hhx, Original x2: 0x%hhx, Ham Code: 0x%hhx\n\n\n", sbox[0x38], (sbox[0x38] << 1), hamming_encode((sbox[0x38] << 1)));
 
   uint8_t buffer[AES_BLOCKLEN];
 
