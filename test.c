@@ -31,8 +31,8 @@ static int test_encrypt_ctr(void);
 
 int main(void)
 {
-    //int exit;
 
+/*
 #if defined(AES256)
     printf("\nTesting AES256\n\n");
 #elif defined(AES192)
@@ -43,8 +43,7 @@ int main(void)
     printf("You need to specify a symbol between AES128, AES192 or AES256. Exiting");
     return 0;
 #endif
-
-    //hamtransform();
+//*/
 
     return test_encrypt_ctr();
 }
@@ -310,11 +309,13 @@ static int verbose_test_xcrypt_ctr(const char* xcrypt)
     uint8_t iv[16]  = { 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff };
     
     inputdata data, plaindata;
-    if(readbinary(&data) == 2 || readbinary(&plaindata) == 2)
+    if(readbinary(&data) == 2)
     {
     	fclose(f);
     	return(2);
     }
+    memcpy(plaindata.input, data.input, sizeof(data.input));
+    plaindata.size = data.size;
 
     uint32_t inputlen = sizeof(data.input);
     long unsigned int rounds = (inputlen / sizeof(key));
@@ -354,7 +355,7 @@ static int verbose_test_xcrypt_ctr(const char* xcrypt)
     	phex(data.input + (i * 16), f);
     }
 
-    printf("CTR %s: ", xcrypt);
+    printf("\nTesting AES128 CTR: ");
   
     if (0 == memcmp((char *) plaindata.input, (char *) data.input, inputlen)) {
         printf("SUCCESS!\n");
