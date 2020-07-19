@@ -426,10 +426,10 @@ static void predictMixCols(state_t* state, hamstate_t* pcode)
 
   for(uint8_t c = 0; c < 4; ++c)
   {
-    (*pcode)[c][0] = hamming_encode(xtime((*state)[c][0])) ^ hamming_encode(Multiply((*state)[c][1], 0x03)) ^ hamming_encode((*state)[c][2]) ^ hamming_encode((*state)[c][3]);
-    (*pcode)[c][1] = hamming_encode((*state)[c][0]) ^ hamming_encode(xtime((*state)[c][1])) ^ hamming_encode(Multiply((*state)[c][2], 0x03)) ^ hamming_encode((*state)[c][3]);
-    (*pcode)[c][2] = hamming_encode((*state)[c][0]) ^ hamming_encode((*state)[c][1]) ^ hamming_encode(xtime((*state)[c][2])) ^ hamming_encode(Multiply((*state)[c][3], 0x03));
-    (*pcode)[c][3] = hamming_encode(Multiply((*state)[c][0], 0x03)) ^ hamming_encode((*state)[c][1]) ^ hamming_encode((*state)[c][2]) ^ hamming_encode(xtime((*state)[c][3]));
+    (*pcode)[c][0] = hamming_encode(xtime((*state)[c][0]) ^ Multiply((*state)[c][1], 0x03) ^ (*state)[c][2] ^ (*state)[c][3]);
+    (*pcode)[c][1] = hamming_encode((*state)[c][0] ^ xtime((*state)[c][1]) ^ Multiply((*state)[c][2], 0x03) ^ (*state)[c][3]);
+    (*pcode)[c][2] = hamming_encode((*state)[c][0] ^ (*state)[c][1] ^ xtime((*state)[c][2]) ^ Multiply((*state)[c][3], 0x03));
+    (*pcode)[c][3] = hamming_encode(Multiply((*state)[c][0], 0x03) ^ (*state)[c][1] ^ (*state)[c][2] ^ xtime((*state)[c][3]));
     //printf("Line: (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx, (%p) 0x%hhx\n", pcode[0][c], (*pcode)[0][c], pcode[1][c], (*pcode)[1][c], pcode[2][c], (*pcode)[2][c], pcode[3][c], (*pcode)[3][c]);
 
     //-----------------------------------------------
