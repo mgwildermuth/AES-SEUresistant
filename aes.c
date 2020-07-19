@@ -509,8 +509,8 @@ static void compareCodes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode
     //printf("Codes do not agree in %s, before correction\n", transform);
     correct_state(state, hamstate, pcode);
 
-    encode_state(state, hamstate);
     /*
+    encode_state(state, hamstate);
 
     //uint8_t r, c;
     printf("\nHamState:\n");
@@ -533,12 +533,12 @@ static void compareCodes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode
       printf("\n");
     }
     printf("\n");
-    //*/
     if(memcmp((char*) hamstate, (char*) pcode, sizeof(hamstate_t)) != 0)
     {
       printf("Codes do not agree in %s, after correction\n", transform);
       exit(2);
     }
+    //*/
   }
   /*
   else
