@@ -251,6 +251,11 @@ static uint8_t get_bit(uint8_t byte, uint8_t bitnum)
   return ((byte >> bitnum) & 0x01);
 }
 
+static uint8_t flip_bit(uint8_t byte, uint8_t target)
+{
+  return (byte ^ (0x01 << target));
+}
+
 // creating hamming code from a byte of data
 static uint8_t hamming_encode(uint8_t given)
 { 
@@ -273,7 +278,86 @@ static uint8_t hamming_encode(uint8_t given)
   return hambyte;
 }
 
-static void encodeState(state_t* state, hamstate_t* hamstate)
+static void correct_state(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
+{
+  //int8_t anspos[2];
+  uint8_t c, r; 
+  int8_t x;
+  for (r = 0; r < 4; ++r)
+  {
+    for (c = 0; c < 4; ++c)
+    {
+      int8_t pone = -1, ptwo = -1;
+      //printf("(*hamstate)[c][r]: 0x0%hhx, (*pcode)[c][r]: 0x0%hhx\n", (*hamstate)[c][r], (*pcode)[c][r]);
+      uint8_t diff = ( (*hamstate)[c][r] ^ (*pcode)[c][r] );
+      printf("diff:%x\n", diff);
+      if(diff != 0)
+      {
+        for(x = 3; x >= 0; --x)
+        {
+          //printf("haha diff\n");
+          //go through hamming bits of [c][r] of hamstate and pcode to spot any differences.
+          //differences can be spotted through
+          printf("\tdiff(%u): %x\n", x, ( (diff >> x) % 2 ));
+          if( ( (diff >> x) % 2 ) == 0)
+          {
+            printf("Error at %d at pos [%u][%u]. (*hamstate)[c][r]: 0x0%hhx, (*pcode)[c][r]: 0x0%hhx\n", x, c, r, (*hamstate)[c][r], (*pcode)[c][r]);
+            if(pone == -1)
+              pone = x;
+            else if(ptwo == -1)
+              ptwo = x;
+          }
+        }
+        //do the actual flip here of (*state)[c][r]. Follows table 3 from the main 2009 hamming code paper. 
+        printf("pos0: %d, pos1: %d\n", pone, ptwo);
+        printf("State before: 0x%hhx\n", (*state)[c][r]);
+        if(pone == 3 && ptwo == 2)
+        {
+          (*state)[c][r] = flip_bit((*state)[c][r], 0x00);
+        }
+        else if(pone == 3 && ptwo == 1)
+        {
+          (*state)[c][r] = flip_bit((*state)[c][r], 0x02);
+        }
+        else if(pone == 3 && ptwo == 0)
+        {
+          (*state)[c][r] = flip_bit((*state)[c][r], 0x05);
+        }
+        else if(pone == 2 && ptwo == 1)
+        {
+          (*state)[c][r] = flip_bit((*state)[c][r], 0x03);
+        }
+        else if(pone == 2 && ptwo == 0)
+        {
+          (*state)[c][r] = flip_bit((*state)[c][r], 0x06);
+        }
+        else if(pone == 1 && ptwo == 0)
+        {
+          (*state)[c][r] = flip_bit((*state)[c][r], 0x07);
+        }
+        else if(pone == 1 && ptwo == -1)
+        {
+          (*state)[c][r] = flip_bit((*state)[c][r], 0x01);
+        }
+        else if(pone == 0 && ptwo == -1)
+        {
+          (*state)[c][r] = flip_bit((*state)[c][r], 0x04);
+        }
+        /*
+        if(anspos[0] != -1)
+          flip_bit((*state)[c][r], anspos[0]);
+        if(anspos[1] != -1)
+          flip_bit((*state)[c][r], anspos[1]);
+        */
+        printf("State after: 0x%hhx\n", (*state)[c][r]);
+      }
+      //for through rows
+    }
+    //for through columns
+  }
+}
+
+static void encode_state(state_t* state, hamstate_t* hamstate)
 {
   uint8_t i, j;
   for (i = 0; i < 4; ++i)
@@ -388,7 +472,7 @@ static void compareCodes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode
 {
   /*
   uint8_t r, c;
-  printf("\n%s State:\n", transform);
+  printf("\nState After %s:\n", transform);
   for (r = 0; r < 4; ++r)
   {
     for (c = 0; c < 4; ++c)
@@ -420,10 +504,41 @@ static void compareCodes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode
   printf("\n");
   //*/
   
-  if(0 != memcmp((char*) hamstate, (char*) pcode, sizeof(hamstate_t)))
+  if(memcmp((char*) hamstate, (char*) pcode, sizeof(hamstate_t)) != 0)
   {
-    printf("Codes do not agree in %s\n", transform);
-    exit(2);
+    printf("Codes do not agree in %s, before correction\n", transform);
+    correct_state(state, hamstate, pcode);
+
+    /*
+    encode_state(state, hamstate);
+
+    //uint8_t r, c;
+    printf("\nHamState:\n");
+    for (r = 0; r < 4; ++r)
+    {
+      for (c = 0; c < 4; ++c)
+      {
+        printf("0x0%hhx, ", (*hamstate)[c][r] );
+      }
+      printf("\n");
+    }
+
+    printf("\nPredicted Codes:\n");
+    for (r = 0; r < 4; ++r)
+    {
+      for (c = 0; c < 4; ++c)
+      {
+        printf("0x0%hhx, ", (*pcode)[c][r] );
+      }
+      printf("\n");
+    }
+    printf("\n");
+    //*/
+    if(memcmp((char*) hamstate, (char*) pcode, sizeof(hamstate_t)) != 0)
+    {
+      printf("Codes do not agree in %s, after correction\n", transform);
+      exit(2);
+    }
   }
   /*
   else
@@ -538,7 +653,7 @@ static void AddRoundKey(uint8_t round, state_t* state, const uint8_t* RoundKey, 
     }
   }
 
-  encodeState(state, hamstate);
+  encode_state(state, hamstate);
   compareCodes(state, hamstate, pcode, "AddRoundKey");
 }
 
@@ -547,7 +662,14 @@ static void AddRoundKey(uint8_t round, state_t* state, const uint8_t* RoundKey, 
 static void SubBytes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
 {
   predictSub(state, pcode);
-
+  /*
+  // doesn't work in this position. Works injecting the fault anywhere else in the method
+  // and everywhere in all other methods
+  printf("Original state[0][0]: 0x%hhx\n", (*state)[0][0]);
+  (*state)[2][3] = flip_bit((*state)[2][3], 0x00);
+  printf("New state[0][0]: 0x%hhx\n", (*state)[0][0]);
+  //*/
+  
   uint8_t i, j;
   for (i = 0; i < 4; ++i)
   {
@@ -557,7 +679,7 @@ static void SubBytes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
     }
   }
   
-  encodeState(state, hamstate);
+  encode_state(state, hamstate);
   compareCodes(state, hamstate, pcode, "SubBytes");
 }
 
@@ -567,7 +689,7 @@ static void SubBytes(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
 static void ShiftRows(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
 {
   predictShift(pcode);
-  
+
   uint8_t temp;
 
   // Rotate first row 1 columns to left  
@@ -593,7 +715,7 @@ static void ShiftRows(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
   (*state)[2][3] = (*state)[1][3];
   (*state)[1][3] = temp;
 
-  encodeState(state, hamstate);
+  encode_state(state, hamstate);
   compareCodes(state, hamstate, pcode, "ShiftRows");
 }
 
@@ -614,7 +736,7 @@ static void MixColumns(state_t* state, hamstate_t* hamstate, hamstate_t* pcode)
     Tm  = (*state)[i][3] ^ t ;              Tm = xtime(Tm);  (*state)[i][3] ^= Tm ^ Tmp ;
   }
 
-  encodeState(state, hamstate);
+  encode_state(state, hamstate);
   compareCodes(state, hamstate, pcode, "MixColumns");
 }
 
@@ -690,7 +812,7 @@ static void Cipher(state_t* state, const uint8_t* RoundKey)
   uint8_t round = 0;
 
   hamstate_t hamstate, pcode;
-  encodeState(state, &pcode);
+  encode_state(state, &pcode);
 
   // Add the First round key to the state before starting the rounds.
   AddRoundKey(0, state, RoundKey, &hamstate, &pcode);
