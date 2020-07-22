@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 // Enable ECB, CTR and CBC mode. Note this can be done before including aes.h or at compile-time.
 // E.g. with GCC by using the -D flag: gcc -c aes.c -DCBC=0 -DCTR=1 -DECB=1
@@ -302,6 +303,7 @@ static int verbose_test_xcrypt_ctr(const char* xcrypt)
 
 	FILE* f = fopen("test_output.txt", "w");
 	long unsigned int i;
+    struct timeval e1, e2, d1, d2; // for CPU execution timing
 
     uint8_t key[16] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
     uint8_t iv[16]  = { 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff };
@@ -327,8 +329,14 @@ static int verbose_test_xcrypt_ctr(const char* xcrypt)
     struct AES_ctx ctx;
     AES_init_ctx_iv(&ctx, key, iv);
 
-    // print the resulting cipher as 4 x 16 byte strings
+    // encrypt the plain text and time it
+    gettimeofday(&e1, NULL);
+
     AES_CTR_xcrypt_buffer(&ctx, data.input, inputlen);
+    
+    gettimeofday(&e2, NULL);
+    
+    // print the resulting cipher as 4 x 16 byte strings
     for(i = 0; i < rounds; i++)
     {
     	phex(data.input + (i * 16), f);
@@ -337,23 +345,27 @@ static int verbose_test_xcrypt_ctr(const char* xcrypt)
     // reset the iv to the original from the leftover iv by encryption (counter was incremented previously)
     AES_ctx_set_iv(&ctx, iv);
 
-    // print the resulting cipher as 4 x 16 byte strings
-    fprintf(f, "\n\n");
+    gettimeofday(&d1, NULL);
 
     AES_CTR_xcrypt_buffer(&ctx, data.input, inputlen);
+
+    gettimeofday(&d2, NULL);
+    
+    // print the resulting cipher as 4 x 16 byte strings
+    fprintf(f, "\n\n");
     for(i = 0; i < rounds; i++)
     {
     	phex(data.input + (i * 16), f);
     }
   
     if (0 == memcmp((char *) plaindata.input, (char *) data.input, inputlen)) {
-        printf("\nTesting AES128 CTR: SUCCESS!\n");
-        fprintf(f, "\n\nTesting AES128 CTR: SUCCESS!");
+        printf("\nTesting AES128 CTR&&: SUCCESS!\nEncryption Time&&: %ld microseconds\nDecryption Time&&: %ld microseconds\n", (e2.tv_usec - e1.tv_usec), (d2.tv_usec - d1.tv_usec));
+        fprintf(f, "\n\nTesting AES128 CTR&&: SUCCESS!\nEncryption Time&&: %ld microseconds\nDecryption Time&&: %ld microseconds", (e2.tv_usec - e1.tv_usec), (d2.tv_usec - d1.tv_usec));
         fclose(f);
 		return(0);
     } else {
-        printf("\nTesting AES128 CTR: FAILURE!\n");
-        fprintf(f, "\n\nTesting AES128 CTR: FAILURE!");
+        printf("\nTesting AES128 CTR&&: FAILURE!\nEncryption Time&&: %ld microseconds\nDecryption Time&&: %ld microseconds\n", (e2.tv_usec - e1.tv_usec), (d2.tv_usec - d1.tv_usec));
+        fprintf(f, "\n\nTesting AES128 CTR&&: FAILURE!\nEncryption Time&&: %ld microseconds\nDecryption Time&&: %ld microseconds", (e2.tv_usec - e1.tv_usec), (d2.tv_usec - d1.tv_usec));
         fclose(f);
 		return(1);
     }
