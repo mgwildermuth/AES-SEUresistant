@@ -360,12 +360,12 @@ static int verbose_test_xcrypt_ctr(const char* xcrypt)
   
     if (0 == memcmp((char *) plaindata.input, (char *) data.input, inputlen)) {
         printf("\nTesting AES128 CTR&&: SUCCESS!\nEncryption Time&&: %ld microseconds\nDecryption Time&&: %ld microseconds\n", (e2.tv_usec - e1.tv_usec), (d2.tv_usec - d1.tv_usec));
-        fprintf(f, "\n\nTesting AES128 CTR&&: SUCCESS!\nEncryption Time&&: %ld microseconds\nDecryption Time&&: %ld microseconds", (e2.tv_usec - e1.tv_usec), (d2.tv_usec - d1.tv_usec));
+        fprintf(f, "\n\nTesting AES128 CTR&&: SUCCESS!");
         fclose(f);
 		return(0);
     } else {
         printf("\nTesting AES128 CTR&&: FAILURE!\nEncryption Time&&: %ld microseconds\nDecryption Time&&: %ld microseconds\n", (e2.tv_usec - e1.tv_usec), (d2.tv_usec - d1.tv_usec));
-        fprintf(f, "\n\nTesting AES128 CTR&&: FAILURE!\nEncryption Time&&: %ld microseconds\nDecryption Time&&: %ld microseconds", (e2.tv_usec - e1.tv_usec), (d2.tv_usec - d1.tv_usec));
+        fprintf(f, "\n\nTesting AES128 CTR&&: FAILURE!");
         fclose(f);
 		return(1);
     }
